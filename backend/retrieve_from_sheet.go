@@ -68,16 +68,12 @@ func ReadUsersFromSheet() []Guest {
 
 	var guests []Guest
 
-	fmt.Println("Data:")
-
 	for i := 1; i < len(values); i++ {
 		row := values[i]
 		if len(row) == 0 {
 			fmt.Printf("Stopping at empty row line %d\n", i+1)
 			break
 		}
-		fmt.Println(row[0])
-		fmt.Println(len(row))
 		if len(row) < 10 {
 			shortLink, _ := generateShortLink()
 			writeRange := "Feuille 1!J" + strconv.Itoa(i+1)
@@ -94,13 +90,6 @@ func ReadUsersFromSheet() []Guest {
 			ShortLink: row[9].(string),
 		}
 		guests = append(guests, guest)
-
-		// Convert to JSON
-		jsonData, err := json.MarshalIndent(guests, "", "  ")
-		if err != nil {
-			log.Fatalf("Unable to marshal JSON: %v", err)
-		}
-		fmt.Println(string(jsonData))
 
 	}
 	return guests

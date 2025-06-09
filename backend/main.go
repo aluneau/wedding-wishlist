@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
@@ -19,9 +21,29 @@ var guests []Guest
 
 var ctx = context.Background()
 
-var rdb = redis.NewClient(&redis.Options{
-	Addr: os.Getenv("REDIS_ADDR"),
-})
+var rdb *redis.Client
+
+func initRedis() error {
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		return fmt.Errorf("REDIS_ADDR environment variable not set")
+	}
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+
+	// Optionnel : ping pour tester la connexion
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		return fmt.Errorf("failed to connect to Redis at %s: %w", redisAddr, err)
+	}
+
+	return nil
+}
 
 func isAuthorized(r *http.Request) bool {
 	key := r.Header.Get("X-Admin-Key")
@@ -171,13 +193,18 @@ func generateShortLink() (string, error) {
 
 func main() {
 	guests = ReadUsersFromSheet()
+	if err := initRedis(); err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Redis initialization error: %v\n", err)
+		os.Exit(1)
+	}
 
+	fmt.Println("✅ Redis client connected successfully.")
 	syncItemsFromSheet()
 	r := mux.NewRouter()
-	r.HandleFunc("/api/items", getItems).Methods("GET")
-	r.HandleFunc("/api/items", addItem).Methods("POST")
-	r.HandleFunc("/api/items/reserve/{id}", modifyItemReservation).Methods("PUT")
-	r.HandleFunc("/api/users/getByShortLink/{shortLink}", getUserByShortLink).Methods("GET")
+	r.HandleFunc("/items", getItems).Methods("GET")
+	r.HandleFunc("/items", addItem).Methods("POST")
+	r.HandleFunc("/items/reserve/{id}", modifyItemReservation).Methods("PUT")
+	r.HandleFunc("/users/getByShortLink/{shortLink}", getUserByShortLink).Methods("GET")
 	// CORS allowed origins
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"*"}),

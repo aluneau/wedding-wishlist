@@ -9,7 +9,7 @@
     redis_container: redis
     redis_image: docker.io/library/redis:7
     go_container: go-app
-    go_image: wedding-backend 
+    go_image: quay.io/aluneau/wedding-backend 
     go_port: 8080
     credentials_src: /opt/go-app/credentials.json
     credentials_dst: /app/credentials.json
@@ -31,22 +31,6 @@
         name: git
         state: present
 
-    - name: Clone wedding-wishlist repository
-      ansible.builtin.git:
-        repo: https://github.com/aluneau/wedding-wishlist.git
-        dest: /opt/wedding-wishlist
-        version: main   # or specify a tag/branch/commit
-        accept_hostkey: yes
-
-    - name: Build wedding-wishlist container image
-      containers.podman.podman_image:
-        name: wedding-backend
-        tag: latest
-        path: /opt/wedding-wishlist/backend
-        build:
-          format: docker  # or 'oci' depending on your needs
-
-
     - name: Create volume for Redis
       command: podman volume create redis-data
       register: redis_volume_result
@@ -58,6 +42,7 @@
       args:
         stdin: "{{ quay_password }}"
       no_log: true
+
     - name: Create podman network for app
       containers.podman.podman_network:
         name: app-net
@@ -110,11 +95,6 @@
         mode: "0600"
         force: no
 
-    - name: Pull latest go app image
-      containers.podman.podman_image:
-        name: "{{ go_image }}"
-        source: pull
-
     - name: Run Go app container with credentials mounted
       containers.podman.podman_container:
         name: "{{ go_container }}"
@@ -122,7 +102,7 @@
         state: started
         restart_policy: always
         env:
-          REDIS_ADDR: "redis:6379"
+          REDIS_ADDR: "{{ redis_container }}:6379"
         network: app-net
         publish:
           - "{{ go_port }}:{{ go_port }}"
