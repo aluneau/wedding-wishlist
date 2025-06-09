@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM docker.io/library/golang:1.24-alpine AS builder
 
 # Install git and other dependencies required for go modules
 RUN apk add --no-cache git
