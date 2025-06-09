@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
@@ -16,11 +17,10 @@ const adminPasskey = "supersecret123"
 
 var guests []Guest
 
-
 var ctx = context.Background()
 
 var rdb = redis.NewClient(&redis.Options{
-	Addr: "localhost:6379",
+	Addr: os.Getenv("REDIS_ADDR"),
 })
 
 func isAuthorized(r *http.Request) bool {
@@ -168,7 +168,6 @@ func generateShortLink() (string, error) {
 
 	return short, nil
 }
-
 
 func main() {
 	guests = ReadUsersFromSheet()

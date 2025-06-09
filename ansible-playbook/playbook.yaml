@@ -1,0 +1,166 @@
+---
+- name: Setup Podman-based Go app and Redis with persistent volume and backups
+  hosts: all
+  become: true
+
+  vars:
+    redis_volume: redis-data
+    redis_backup_dir: /opt/redis-backups
+    redis_container: redis
+    redis_image: docker.io/library/redis:7
+    go_container: go-app
+    go_image: quay.io/aluneau/wedding-backend
+    go_port: 8080
+    credentials_src: /opt/go-app/credentials.json
+    credentials_dst: /app/credentials.json
+  vars_prompt:
+    - name: quay_password
+      prompt: "Quay.io password"
+      private: yes
+
+  tasks:
+
+    - name: Install Podman and tar
+      dnf:
+        name:
+          - podman
+          - tar
+        state: present
+
+    - name: Create volume for Redis
+      command: podman volume create redis-data
+      register: redis_volume_result
+      failed_when: redis_volume_result.rc != 0 and 'volume already exists' not in redis_volume_result.stderr
+      changed_when: "'volume already exists' not in redis_volume_result.stderr"
+
+    - name: Login to quay.io
+      command: podman login quay.io --username aluneau --password-stdin
+      args:
+        stdin: "{{ quay_password }}"
+      no_log: true
+    - name: Create podman network for app
+      containers.podman.podman_network:
+        name: app-net
+        state: present
+
+    - name: Run Redis container with volume
+      containers.podman.podman_container:
+        name: "{{ redis_container }}"
+        image: "{{ redis_image }}"
+        state: started
+        restart_policy: always
+        network: app-net
+        volumes:
+          - "{{ redis_volume }}:/data"
+        env:
+          REDIS_APPENDONLY: "yes"
+        publish:
+          - "6379:6379"
+
+    - name: Generate Redis systemd service
+      command: podman generate systemd --name {{ redis_container }} --files --restart-policy=always
+      args:
+        chdir: /etc/systemd/system
+      register: redis_systemd
+
+    - name: Enable Redis systemd service
+      systemd:
+        name: container-{{ redis_container }}.service
+        enabled: true
+        state: started
+
+    - name: Ensure credentials directory exists
+      file:
+        path: "{{ credentials_src | dirname }}"
+        state: directory
+        mode: "0755"
+
+    - name: (Optional) Create dummy credentials.json if not present
+      copy:
+        dest: "{{ credentials_src }}"
+        content: |
+          {
+            "api_key": "your-api-key",
+            "project_id": "your-project-id"
+          }
+        mode: "0600"
+        force: no
+
+    - name: Pull latest go app image
+      containers.podman.podman_image:
+        name: "{{ go_image }}"
+        source: pull
+
+    - name: Run Go app container with credentials mounted
+      containers.podman.podman_container:
+        name: "{{ go_container }}"
+        image: "{{ go_image }}"
+        state: started
+        restart_policy: always
+        env:
+          REDIS_ADDR: "redis:6379"
+        network: app-net
+        publish:
+          - "{{ go_port }}:{{ go_port }}"
+        volumes:
+          - "{{ credentials_src }}:{{ credentials_dst }}:ro"
+
+    - name: Generate Go app systemd service
+      command: podman generate systemd --name {{ go_container }} --files --restart-policy=always
+      args:
+        chdir: /etc/systemd/system
+      register: go_systemd
+
+    - name: Enable Go app systemd service
+      systemd:
+        name: container-{{ go_container }}.service
+        enabled: true
+        state: started
+
+    - name: Create Redis backup directory
+      file:
+        path: "{{ redis_backup_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create Redis backup script
+      copy:
+        dest: /usr/local/bin/backup-redis.sh
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+          BACKUP_FILE="{{ redis_backup_dir }}/redis-backup-$TIMESTAMP.tar.gz"
+          podman run --rm -v {{ redis_volume }}:/data:ro alpine tar czf - /data > "$BACKUP_FILE"
+
+    - name: Create systemd service for Redis backup
+      copy:
+        dest: /etc/systemd/system/backup-redis.service
+        content: |
+          [Unit]
+          Description=Backup Redis container volume
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/local/bin/backup-redis.sh
+
+    - name: Create systemd timer for Redis backup
+      copy:
+        dest: /etc/systemd/system/backup-redis.timer
+        content: |
+          [Unit]
+          Description=Run Redis backup daily
+
+          [Timer]
+          OnCalendar=daily
+          Persistent=true
+
+          [Install]
+          WantedBy=timers.target
+
+    - name: Enable and start Redis backup timer
+      systemd:
+        name: backup-redis.timer
+        enabled: true
+        state: started
+
