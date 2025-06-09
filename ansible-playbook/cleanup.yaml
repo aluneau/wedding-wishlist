@@ -1,0 +1,59 @@
+---
+- name: Cleanup wedding deployment
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Stop and disable Redis systemd service
+      ansible.builtin.systemd:
+        name: container-redis.service
+        enabled: false
+        state: stopped
+      ignore_errors: true
+
+    - name: Stop and disable Go app systemd service
+      ansible.builtin.systemd:
+        name: go-app.service
+        enabled: false
+        state: stopped
+      ignore_errors: true
+
+    - name: Remove systemd service files
+      ansible.builtin.file:
+        path: "/etc/systemd/system/container-{{ item }}.service"
+        state: absent
+      loop:
+        - redis
+        - wedding
+
+    - name: Reload systemd to apply service removals
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Remove Redis and Go app containers
+      ansible.builtin.command: "podman rm -f {{ item }}"
+      loop:
+        - redis
+        - wedding
+      ignore_errors: true
+
+    - name: Remove Podman images
+      ansible.builtin.command: "podman rmi -f {{ item }}"
+      loop:
+        - quay.io/aluneau/wedding-backend
+        - wedding:latest
+      ignore_errors: true
+
+    - name: Remove Redis volume
+      ansible.builtin.command: "podman volume rm redis-data"
+      ignore_errors: true
+
+    - name: Remove cloned Git repository
+      ansible.builtin.file:
+        path: /opt/wedding-wishlist
+        state: absent
+
+    - name: Confirm cleanup completed
+      ansible.builtin.debug:
+        msg: "✅ Cleanup finished successfully."
+

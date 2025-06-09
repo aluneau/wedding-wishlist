@@ -9,7 +9,7 @@
     redis_container: redis
     redis_image: docker.io/library/redis:7
     go_container: go-app
-    go_image: quay.io/aluneau/wedding-backend
+    go_image: wedding-backend 
     go_port: 8080
     credentials_src: /opt/go-app/credentials.json
     credentials_dst: /app/credentials.json
@@ -26,6 +26,26 @@
           - podman
           - tar
         state: present
+    - name: Ensure Git is installed
+      ansible.builtin.package:
+        name: git
+        state: present
+
+    - name: Clone wedding-wishlist repository
+      ansible.builtin.git:
+        repo: https://github.com/aluneau/wedding-wishlist.git
+        dest: /opt/wedding-wishlist
+        version: main   # or specify a tag/branch/commit
+        accept_hostkey: yes
+
+    - name: Build wedding-wishlist container image
+      containers.podman.podman_image:
+        name: wedding-backend
+        tag: latest
+        path: /opt/wedding-wishlist/backend
+        build:
+          format: docker  # or 'oci' depending on your needs
+
 
     - name: Create volume for Redis
       command: podman volume create redis-data
@@ -63,10 +83,14 @@
         chdir: /etc/systemd/system
       register: redis_systemd
 
-    - name: Enable Redis systemd service
-      systemd:
-        name: container-{{ redis_container }}.service
-        enabled: true
+    - name: Force systemd daemon reload
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Redis systemd service
+      ansible.builtin.systemd:
+        name: container-redis.service
+        enabled: yes
         state: started
 
     - name: Ensure credentials directory exists
