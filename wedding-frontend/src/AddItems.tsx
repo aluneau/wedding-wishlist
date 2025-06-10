@@ -15,7 +15,7 @@ function AddItems() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("http://localhost:8080/api/items", {
+    await fetch("https://wishlist.luneau.me/api/items", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Admin-Key": form.password },
       body: JSON.stringify(form),

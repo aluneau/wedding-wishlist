@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from 'react-hot-toast';
+
 function WishList() {
   type User = {
     name: string;
@@ -35,7 +36,7 @@ function WishList() {
   }, [userShortLink]);
 
   function loadItems() {
-    fetch("http://localhost:8080/api/items")
+    fetch("https://wishlist.luneau.me/api/items")
       .then((res) => res.json())
       .then(setItems)
       .catch((err) => setError(err.message))
@@ -43,7 +44,7 @@ function WishList() {
   }
 
   function loadUser(shortLink: string) {
-    fetch(`http://localhost:8080/api/users/getByShortLink/${shortLink}`)
+    fetch(`https://wishlist.luneau.me/api/users/getByShortLink/${shortLink}`)
       .then((res) => res.json())
       .then(setUser)
       .catch((err) => setError(err.message))
@@ -53,7 +54,7 @@ function WishList() {
 
   function toggleReservation(id: string) {
     if (user != null) {
-      fetch(`http://localhost:8080/api/items/reserve/${id}`, {
+      fetch(`https://wishlist.luneau.me/api/items/reserve/${id}`, {
         method: "PUT",
         body: JSON.stringify({
           shortLink: user.shortLink
@@ -77,22 +78,16 @@ function WishList() {
   return (
     <div className="flex min-h-screen flex-col items-center pt-8 bg-base-100 px-4">
 
-      <h1 className="text-3xl font-bold text-primary mb-6 text-center max-w-lg">
-        {user && user.name != null
-          ? `Welcome ${user.name} to Our Wedding Wishlist! 🎉`
-          : null}
-      </h1>
-
       <div className="card w-full max-w-lg bg-white shadow-lg rounded-xl p-6 sm:p-8">
-        <h2 className="card-title text-center mb-6 text-2xl font-semibold text-primary">
-          Marriage Wishlist
+        <h2 className="text-center mb-3 text-5xl font-semibold text-blue-900 text-center font-creamcake">
+          Idées de cadeaux
         </h2>
 
         <ul className="space-y-6">
           {items.map(({ id, name, description, imageUrl, amazonUrl, reserved }) => (
             <li
               key={id}
-              className={`flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 transition-all duration-300 ${reserved ? "opacity-60" : ""
+              className={`flex flex-col flex-row items-center space-y-3 space-y-0 space-x-4 transition-all duration-300 ${reserved ? "opacity-60" : ""
                 }`}
             >
               <input
@@ -105,7 +100,7 @@ function WishList() {
               <div className="flex-1">
                 <label
                   htmlFor={`item-${id}`}
-                  className={`select-none cursor-pointer block text-lg font-medium transition-all duration-300 ${reserved ? "line-through text-gray-400 italic" : "text-gray-700"
+                  className={`select-none cursor-pointer block text-lg font-medium transition-all duration-300 ${reserved ? "line-through text-gray-400 italic" : "text-beaubleau-100"
                     }`}
                 >
                   {name}
@@ -114,7 +109,7 @@ function WishList() {
                 <div className="mt-1 flex items-center space-x-3 opacity-80">
                   {imageUrl && (
                     <img
-                      src={imageUrl}
+                      src={`../pictures/${imageUrl}`}
                       alt={name}
                       className="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                     />
@@ -128,7 +123,7 @@ function WishList() {
                         rel="noopener noreferrer"
                         className="text-primary underline hover:text-primary-focus"
                       >
-                        View on Amazon
+                        Lien
                       </a>
                     )}
                   </div>
