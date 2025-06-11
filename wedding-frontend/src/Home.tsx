@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 
 function Home() {
- const { userShortLink } = useParams<{ userShortLink: string }>();
+  const { userShortLink } = useParams<{ userShortLink: string }>();
   return (
 
     <div className="flex min-h-screen flex-col items-center bg-base-100 px-4">
@@ -10,15 +10,16 @@ function Home() {
       <div className="max-w-3xl mx-auto px-4 py-6">
 
         <div className="text-center mb-2">
-          <h1 className="text-6xl text-blue-900 font-extrabold font-creamcake ">
+          <h1 className="text-6xl text-lys-100 font-extrabold font-creamcake ">
             Liste de mariage
           </h1>
+
           <p className="text-3xl text-saumon-100 text-seconmt-2 font-medium font-hellovalentina">
             Faustine & Adrien
           </p>
         </div>
 
-        <div className="bg-base-100 shadow-xl rounded-2xl p-8 prose prose-lg mx-auto text-beaubleau-100 font-perfectday text-3xl ">
+        <div className="bg-white shadow-xl shadow-lys-100 rounded-2xl py-6 px-20 prose prose-lg mx-auto text-bleufonce-100 text-justify font-perfectday text-3xl ">
           <div className="flex justify-center mb-6">
             <img
               src="./pictures/faustineadrien.png"
@@ -30,7 +31,7 @@ function Home() {
 
           <p className="py-2">
             Voici quelques petites idées de cadeaux possibles au cas où vous souhaiteriez
-            nous en offrir à l'occasion de notre mariage. Ceci, évidemment, n'est pas
+            nous en offrir à l'occasion de notre mariage le 9 Août. Ceci, évidemment, n'est pas
             obligatoire, mais simplement indicatif.
           </p>
 
@@ -46,10 +47,10 @@ function Home() {
           <p className="py-2">
             Merci à tous
           </p>
-          <div className = "flex justify-center">
+          <div className="flex justify-center">
             <Link
               to={`/wishlist/${userShortLink}`}
-              className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow transition duration-300"
+              className="inline-block px-4 py-2 bg-lys-100 hover:bg-lys-200 text-white rounded-xl shadow transition duration-300"
             >
               Voir la WishList
             </Link>

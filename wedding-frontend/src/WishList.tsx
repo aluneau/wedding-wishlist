@@ -79,7 +79,7 @@ function WishList() {
     <div className="flex min-h-screen flex-col items-center pt-8 bg-base-100 px-4">
 
       <div className="card w-full max-w-lg bg-white shadow-lg rounded-xl p-6 sm:p-8">
-        <h2 className="text-center mb-3 text-5xl font-semibold text-blue-900 text-center font-creamcake">
+        <h2 className="text-center mb-3 text-5xl font-semibold text-lys-100 text-center font-creamcake">
           Idées de cadeaux
         </h2>
 
@@ -100,7 +100,7 @@ function WishList() {
               <div className="flex-1">
                 <label
                   htmlFor={`item-${id}`}
-                  className={`select-none cursor-pointer block text-lg font-medium transition-all duration-300 ${reserved ? "line-through text-gray-400 italic" : "text-beaubleau-100"
+                  className={`select-none cursor-pointer block text-lg font-medium transition-all duration-300 ${reserved ? "line-through text-gray-400 italic" : "text-saumon-100"
                     }`}
                 >
                   {name}
@@ -114,14 +114,14 @@ function WishList() {
                       className="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                     />
                   )}
-                  <div className="flex flex-col text-sm text-gray-500">
+                  <div className="flex flex-col text-sm text-bleufonce-100">
                     <p>{description}</p>
                     {amazonUrl && (
                       <a
                         href={amazonUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary underline hover:text-primary-focus"
+                        className="text-blue-800  underline hover:text-primary-focus"
                       >
                         Lien
                       </a>
