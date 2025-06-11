@@ -78,7 +78,7 @@ function WishList() {
   return (
     <div className="flex min-h-screen flex-col items-center pt-8 bg-base-100 px-4">
 
-      <div className="card w-full max-w-lg bg-white shadow-lg rounded-xl p-6 sm:p-8">
+      <div className="card w-full max-w-lg bg-white shadow-lg rounded-xl p-6 mb-4 sm:p-8">
         <h2 className="text-center mb-3 text-5xl font-semibold text-lys-100 text-center font-creamcake">
           Idées de cadeaux
         </h2>
