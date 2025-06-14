@@ -24,14 +24,14 @@ func syncItemsFromSheet() {
 			break
 		}
 		if row[0] == "" {
-			uuid := uuid.New()
+			id := uuid.New()
 
 			writeRange := "Wishlist!A" + strconv.Itoa(i+1)
-			valueRange := [][]interface{}{{uuid}}
+			valueRange := [][]interface{}{{id.String}}
 
 			err = client.Write(spreadSheetId, writeRange, valueRange)
 			var newItem RegistryItem
-			newItem.ID = uuid
+			newItem.ID = id
 			newItem.Name = row[1].(string)
 			newItem.Description = row[2].(string)
 			newItem.AmazonURL = row[3].(string)
@@ -41,10 +41,14 @@ func syncItemsFromSheet() {
 			rdb.Set(ctx, key, data, 0)
 			fmt.Println("item added to Redis")
 		} else {
+			fmt.Println(row[0].(string))
 			key := "item:" + row[0].(string)
+			fmt.Println("item already existing")
 			var existingItem RegistryItem
 			val, _ := rdb.Get(ctx, key).Result()
 			json.Unmarshal([]byte(val), &existingItem)
+			id, _ := uuid.Parse(row[0].(string))
+			existingItem.ID = id
 			existingItem.Name = row[1].(string)
 			existingItem.Description = row[2].(string)
 			existingItem.AmazonURL = row[3].(string)

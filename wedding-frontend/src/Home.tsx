@@ -22,7 +22,7 @@ function Home() {
         <div className="bg-white shadow-xl shadow-lys-100 rounded-2xl py-6 px-20 prose prose-lg mx-auto text-bleufonce-100 text-justify font-perfectday text-3xl ">
           <div className="flex justify-center mb-6">
             <img
-              src="./pictures/faustineadrien.png"
+              src="./pictures/faustineadrien.jpeg"
               alt="Faustine et Adrien"
               className="max-w-[175px] sm:max-w-[300px] md:max-w-[400px] w-full h-auto rounded-xl shadow-md"
             />
