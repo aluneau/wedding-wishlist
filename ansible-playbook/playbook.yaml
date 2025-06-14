@@ -57,8 +57,7 @@
         network: app-net
         volumes:
           - "{{ redis_volume }}:/data"
-        env:
-          REDIS_APPENDONLY: "yes"
+        command: ["redis-server", "--appendonly", "yes"]
         publish:
           - "6379:6379"
 
